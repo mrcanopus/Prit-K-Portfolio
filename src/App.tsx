@@ -22,7 +22,9 @@ import {
   Headphones,
   Play,
   Pause,
-  Instagram
+  Instagram,
+  Menu,
+  X
 } from 'lucide-react';
 
 // --- Components ---
@@ -250,10 +252,78 @@ const PortfolioCard = ({ title, description, audioUrl, link, videoId, tracks, in
   );
 };
 
+const SideNav = ({ activeIndex, onDotClick }: { activeIndex: number; onDotClick: (id: string) => void }) => {
+  const sections = [
+    { id: 'about', label: 'About' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'experiments', label: 'Innovation' },
+    { id: 'work', label: 'Career' },
+    { id: 'contact', label: 'Contact' }
+  ];
+
+  return (
+    <div className="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-6 md:gap-8 items-center">
+      {sections.map((section, i) => (
+        <button
+          key={section.id}
+          onClick={() => onDotClick(section.id)}
+          className="group relative flex items-center justify-center p-1.5 md:p-2"
+          aria-label={`Scroll to ${section.label}`}
+        >
+          {/* Label - Hidden on mobile, visible on hover for desktop */}
+          <span className="absolute right-10 px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap translate-x-2 group-hover:translate-x-0 hidden md:block">
+            {section.label}
+          </span>
+          
+          {/* Dot */}
+          <div className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full border-2 transition-all duration-500 ${
+            activeIndex === i 
+              ? 'bg-emerald-500 border-emerald-500 scale-125 md:scale-150 shadow-[0_0_15px_rgba(16,185,129,0.6)]' 
+              : 'border-white/20 hover:border-emerald-500/50'
+          }`} />
+          
+          {/* Active Indicator Ring */}
+          {activeIndex === i && (
+            <motion.div
+              layoutId="activeDot"
+              className="absolute inset-0 border border-emerald-500/30 rounded-full"
+              initial={false}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 // --- Main App ---
 
 export default function App() {
   const { scrollYProgress } = useScroll();
+  
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sectionIds = ['about', 'skills', 'portfolio', 'experiments', 'work', 'contact'];
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const element = document.getElementById(sectionIds[i]);
+        if (element && scrollPosition >= element.offsetTop) {
+          setActiveIndex(i);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const heroRef = useRef(null);
   const portfolioRef = useRef<HTMLElement>(null);
   const [activeTab, setActiveTab] = useState('experience');
@@ -292,11 +362,11 @@ export default function App() {
     }
   };
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement | HTMLDivElement> | null, id: string) => {
+    if (e) e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 100;
+      const headerOffset = 80;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.scrollY - headerOffset;
 
@@ -305,8 +375,8 @@ export default function App() {
         behavior: 'smooth'
       });
       
-      // Update URL hash without jumping
       window.history.pushState(null, '', `#${id}`);
+      setIsMobileMenuOpen(false);
     }
   };
 
@@ -438,7 +508,7 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen font-sans bg-grid selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen bg-[#0a0a0a] selection:bg-emerald-500 selection:text-black font-sans">
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-emerald-500 origin-left z-50"
@@ -446,15 +516,18 @@ export default function App() {
       />
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 glass border-b-0 py-6">
-        <div className="container mx-auto px-10 flex justify-between items-center">
+      <nav className="fixed top-0 w-full z-40 glass border-b-0 py-4 md:py-6">
+        <div className="container mx-auto px-6 md:px-10 flex justify-between items-center">
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-2xl font-display font-bold tracking-tighter"
+            className="text-xl md:text-2xl font-display font-bold tracking-tighter cursor-pointer"
+            onClick={() => scrollToSection(null, 'about')}
           >
             PRIT<span className="text-emerald-500">.</span>KAMBLE
           </motion.div>
+          
+          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-12 text-sm font-mono uppercase tracking-widest text-white/60">
             <a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="hover:text-emerald-500 transition-colors">About</a>
             <a href="#skills" onClick={(e) => scrollToSection(e, 'skills')} className="hover:text-emerald-500 transition-colors">Skills</a>
@@ -463,324 +536,323 @@ export default function App() {
             <a href="#work" onClick={(e) => scrollToSection(e, 'work')} className="hover:text-emerald-500 transition-colors">Career</a>
             <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-emerald-500 transition-colors">Contact</a>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="md:hidden text-white p-2"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-b border-white/10 md:hidden"
+            >
+              <div className="flex flex-col p-8 gap-6 text-sm font-mono uppercase tracking-widest">
+                <a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="text-white/70 hover:text-emerald-500 py-2">About</a>
+                <a href="#skills" onClick={(e) => scrollToSection(e, 'skills')} className="text-white/70 hover:text-emerald-500 py-2">Skills</a>
+                <a href="#portfolio" onClick={(e) => scrollToSection(e, 'portfolio')} className="text-white/70 hover:text-emerald-500 py-2">Portfolio</a>
+                <a href="#experiments" onClick={(e) => scrollToSection(e, 'experiments')} className="text-white/70 hover:text-emerald-500 py-2">Experiments</a>
+                <a href="#work" onClick={(e) => scrollToSection(e, 'work')} className="text-white/70 hover:text-emerald-500 py-2">Career</a>
+                <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="text-white/70 hover:text-emerald-500 py-2">Contact</a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      {/* Hero Section */}
-      <section id="about" ref={heroRef} className="relative pt-40 pb-20 overflow-hidden">
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="inline-block px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-xs uppercase tracking-widest mb-6">
-                Sonic Architect | AI Audio Engineer
-              </span>
-              <h1 className="text-6xl md:text-8xl font-display font-bold leading-[0.9] mb-8">
-                CRAFTING<br />
-                <span className="text-emerald-500 italic">SONIC</span><br />
-                EXPERIENCES.
-              </h1>
-              <p className="text-xl text-white/60 max-w-2xl mb-12 leading-relaxed">
-                Collaborative Audio Engineer leveraging 4+ years of commercial radio experience 
-                to architect immersive soundscapes. Expertly blending technical mixing mastery 
-                with AI-enhanced production to meet the evolving demands of today’s media landscape.
-              </p>
-            </motion.div>
+      {/* Side Dot Navigation */}
+      <SideNav activeIndex={activeIndex} onDotClick={(id) => scrollToSection(null, id)} />
+
+      <main>
+        {/* Hero Section */}
+        <section id="about" ref={heroRef} className="relative min-h-screen flex items-center pt-32 pb-20 overflow-hidden">
+          <div className="container mx-auto px-6 relative z-10">
+            <div className="max-w-4xl">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <span className="inline-block px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono text-xs uppercase tracking-widest mb-6">
+                  Sonic Architect | AI Audio Engineer
+                </span>
+                <h1 className="text-5xl md:text-8xl font-display font-bold leading-[0.9] mb-8">
+                  CRAFTING<br />
+                  <span className="text-emerald-500 italic">SONIC</span><br />
+                  EXPERIENCES.
+                </h1>
+                <p className="text-xl text-white/60 max-w-2xl mb-12 leading-relaxed">
+                  Collaborative Audio Engineer leveraging 4+ years of commercial radio experience 
+                  to architect immersive soundscapes. Expertly blending technical mixing mastery 
+                  with AI-enhanced production to meet the evolving demands of today’s media landscape.
+                </p>
+              </motion.div>
 
               <div className="flex flex-wrap gap-6 items-center">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
-                  onClick={(e: any) => scrollToSection(e, 'portfolio')}
+                  onClick={() => scrollToSection(null, 'portfolio')}
                   className="flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-bold transition-all hover:bg-emerald-500"
                 >
                   View Portfolio <ChevronRight size={20} />
                 </motion.button>
               </div>
-          </div>
-        </div>
-
-        {/* Decorative Visualizer */}
-        <div className="absolute right-[-10%] top-1/2 -translate-y-1/2 w-1/2 hidden lg:block pointer-events-none">
-          <SoundVisualizer />
-          <div className="mt-8 flex justify-center">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="w-64 h-64 rounded-full border border-emerald-500/20 flex items-center justify-center"
-            >
-              <div className="w-48 h-48 rounded-full border border-emerald-500/40 flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <Headphones size={48} className="text-emerald-500" />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats / Marquee */}
-      <div className="py-12 border-y border-white/5 bg-white/[0.02]">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            {[
-              { label: "Years Experience", val: "4+" },
-              { label: "Audio Creatives", val: "2000+" },
-              { label: "Markets", val: "9+" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center md:text-left">
-                <div className="text-4xl font-display font-bold text-emerald-500 mb-1">{stat.val}</div>
-                <div className="text-xs font-mono uppercase tracking-widest text-white/40">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Skills Section */}
-      <section id="skills" className="py-32">
-        <div className="container mx-auto px-6">
-          <SectionHeading title="Technical Arsenal" subtitle="Expertise" />
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-            {skills.map((skill, i) => (
-              <SkillCard key={i} name={skill.name} icon={skill.icon} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section ref={portfolioRef} id="portfolio" className="py-32 bg-white/[0.02]">
-        <div className="container mx-auto px-6">
-          <SectionHeading title="Auditory Landscapes" subtitle="Portfolio" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {portfolioItems.map((item, i) => (
-              <PortfolioCard 
-                key={i} 
-                index={i} 
-                {...item} 
-                activeTrackId={activeTrackId}
-                loadingTrackId={loadingTrackId}
-                onTogglePlay={togglePlay}
-              />
-            ))}
-          </div>
-          <audio 
-            ref={audioRef} 
-            onEnded={() => setActiveTrackId(null)}
-            className="hidden"
-            preload="metadata"
-          />
-        </div>
-      </section>
-
-      {/* Experiments Section */}
-      <section id="experiments" className="py-32 bg-white/[0.01]">
-        <div className="container mx-auto px-6">
-          <SectionHeading title="Experimental Lab" subtitle="Innovation" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Project 1 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="glass p-8 rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <Zap size={24} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-display font-bold">AI Radio Automation Tool</h3>
-                  <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest">[Beta Stage]</span>
-                </div>
-              </div>
-              <p className="text-white/60 mb-8 leading-relaxed">
-                Building an integrated AI ecosystem to streamline the end-to-end production of radio commercials. The tool assists sound engineers by:
-              </p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex gap-4">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <div>
-                    <span className="text-white font-bold block mb-1">Script Intelligence</span>
-                    <p className="text-sm text-white/50">Analyzing copy to provide creative suggestions and tone matching.</p>
-                  </div>
-                </li>
-                <li className="flex gap-4">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <div>
-                    <span className="text-white font-bold block mb-1">Automated Synthesis</span>
-                    <p className="text-sm text-white/50">Generating high-fidelity voiceovers and bespoke musical scores tailored to the script's mood.</p>
-                  </div>
-                </li>
-                <li className="flex gap-4">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <div>
-                    <span className="text-white font-bold block mb-1">Smart Assembly</span>
-                    <p className="text-sm text-white/50">Automatically arranging and processing audio files for a polished final mix.</p>
-                  </div>
-                </li>
-              </ul>
-              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                <p className="text-sm text-white/70 italic">
-                  The system is currently in Beta, with a functional MVP that successfully reduces production time from hours to minutes.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Project 2 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="glass p-8 rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all flex flex-col"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <Radio size={24} />
-                </div>
-                <h3 className="text-2xl font-display font-bold">In-Store Radio Architect</h3>
-              </div>
-              <p className="text-white/60 mb-8 leading-relaxed">
-                Specializing in end-to-end In-Store Radio ecosystems for large-scale retail complexes, grocery chains, and hospitality groups.
-              </p>
-              <div className="space-y-6 mt-auto">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 shrink-0">
-                    <Layers size={18} />
-                  </div>
-                  <p className="text-sm text-white/50 leading-relaxed">
-                    I architect bespoke sonic environments remotely, managing the entire lifecycle—from conceptualizing atmospheric 'ambience' to producing high-impact promotional announcements.
-                  </p>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 shrink-0">
-                    <Terminal size={18} />
-                  </div>
-                  <p className="text-sm text-white/50 leading-relaxed">
-                    Maintaining rigorous broadcast logs via centralized remote management systems, ensuring seamless delivery across multiple locations.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Experience Section */}
-      <section id="work" className="py-32 bg-white/[0.01]">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-20">
-            <div className="lg:w-1/3">
-              <SectionHeading title="Professional Journey" subtitle="Career" />
-              <p className="text-white/50 mb-8 leading-relaxed">
-                From interning at Radio Orange to leading sound engineering at My FM, 
-                my journey has been defined by a relentless pursuit of sonic perfection.
-              </p>
-              
-              <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-fit">
-                <button 
-                  onClick={() => setActiveTab('experience')}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'experience' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'}`}
-                >
-                  Experience
-                </button>
-                <button 
-                  onClick={() => setActiveTab('education')}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'education' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'}`}
-                >
-                  Education
-                </button>
-              </div>
-            </div>
-
-            <div className="lg:w-2/3">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {(activeTab === 'experience' ? experiences : education).map((item, i) => (
-                    <ExperienceItem key={i} index={i} {...item} />
-                  ))}
-                </motion.div>
-              </AnimatePresence>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="py-32">
-        <div className="container mx-auto px-6">
-          <div className="glass rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full" />
+          {/* Decorative Visualizer */}
+          <div className="absolute right-[5%] top-1/2 -translate-y-1/2 w-1/3 hidden lg:block pointer-events-none">
+            <SoundVisualizer />
+            <div className="mt-8 flex justify-center">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="w-64 h-64 rounded-full border border-emerald-500/20 flex items-center justify-center"
+              >
+                <div className="w-48 h-48 rounded-full border border-emerald-500/40 flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <Headphones size={48} className="text-emerald-500" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Skills Section */}
+        <section id="skills" className="min-h-screen flex items-center py-32">
+          <div className="container mx-auto px-6">
+            <SectionHeading title="Technical Arsenal" subtitle="Expertise" />
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+              {skills.map((skill, i) => (
+                <SkillCard key={i} name={skill.name} icon={skill.icon} />
+              ))}
+            </div>
             
-            <div className="relative z-10 max-w-2xl mx-auto text-center">
-              <div>
-                <h2 className="text-5xl font-display font-bold mb-8 text-center">Let's make some <span className="text-emerald-500">noise</span>.</h2>
-                <p className="text-white/60 mb-12 text-lg text-center">
-                  From sonic branding and podcast mastering to network revamps, AI-driven ad tools, and turnkey in-store radio—I am ready to architect your brand’s auditory future.
+            <div className="mt-20 py-12 border-y border-white/5 bg-white/[0.02] rounded-3xl">
+              <div className="container mx-auto px-6">
+                <div className="grid grid-cols-3 gap-8">
+                  {[
+                    { label: "Years Experience", val: "4+" },
+                    { label: "Audio Creatives", val: "2000+" },
+                    { label: "Markets", val: "9+" },
+                  ].map((stat, i) => (
+                    <div key={i} className="text-center">
+                      <div className="text-4xl font-display font-bold text-emerald-500 mb-1">{stat.val}</div>
+                      <div className="text-xs font-mono uppercase tracking-widest text-white/40">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Portfolio Section */}
+        <section ref={portfolioRef} id="portfolio" className="min-h-screen flex items-center py-32 bg-white/[0.02]">
+          <div className="container mx-auto px-6">
+            <SectionHeading title="Auditory Landscapes" subtitle="Portfolio" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {portfolioItems.map((item, i) => (
+                <PortfolioCard 
+                  key={i} 
+                  index={i} 
+                  {...item} 
+                  activeTrackId={activeTrackId}
+                  loadingTrackId={loadingTrackId}
+                  onTogglePlay={togglePlay}
+                />
+              ))}
+            </div>
+            <audio 
+              ref={audioRef} 
+              onEnded={() => setActiveTrackId(null)}
+              className="hidden"
+              preload="metadata"
+            />
+          </div>
+        </section>
+
+        {/* Experiments Section */}
+        <section id="experiments" className="min-h-screen flex items-center py-32 bg-white/[0.01]">
+          <div className="container mx-auto px-6">
+            <SectionHeading title="Experimental Lab" subtitle="Innovation" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Project 1 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="glass p-8 rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <Zap size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-display font-bold">AI Radio Automation Tool</h3>
+                    <span className="text-xs font-mono text-emerald-500 uppercase tracking-widest">[Beta Stage]</span>
+                  </div>
+                </div>
+                <p className="text-white/60 mb-8 leading-relaxed">
+                  Building an integrated AI ecosystem to streamline the end-to-end production of radio commercials.
+                </p>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex gap-4">
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    <div>
+                      <span className="text-white font-bold block mb-1">Script Intelligence</span>
+                      <p className="text-sm text-white/50">Analyzing copy to provide creative suggestions and tone matching.</p>
+                    </div>
+                  </li>
+                  <li className="flex gap-4">
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    <div>
+                      <span className="text-white font-bold block mb-1">Automated Synthesis</span>
+                      <p className="text-sm text-white/50">Generating high-fidelity voiceovers and bespoke musical scores.</p>
+                    </div>
+                  </li>
+                </ul>
+              </motion.div>
+
+              {/* Project 2 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="glass p-8 rounded-[2rem] border border-white/5 hover:border-emerald-500/30 transition-all flex flex-col"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <Radio size={24} />
+                  </div>
+                  <h3 className="text-2xl font-display font-bold">In-Store Radio Architect</h3>
+                </div>
+                <p className="text-white/60 mb-8 leading-relaxed">
+                  Specializing in end-to-end In-Store Radio ecosystems for large-scale retail complexes and hospitality groups.
+                </p>
+                <div className="space-y-6 mt-auto">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 shrink-0">
+                      <Layers size={18} />
+                    </div>
+                    <p className="text-sm text-white/50 leading-relaxed">
+                      I architect bespoke sonic environments remotely, managing the entire lifecycle.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Experience Section */}
+        <section id="work" className="min-h-screen flex items-center py-32 bg-white/[0.01]">
+          <div className="container mx-auto px-6">
+            <div className="flex flex-col lg:flex-row gap-20">
+              <div className="lg:w-1/3">
+                <SectionHeading title="Professional Journey" subtitle="Career" />
+                <p className="text-white/50 mb-8 leading-relaxed">
+                  From interning at Radio Orange to leading sound engineering at My FM.
                 </p>
                 
-                <div className="grid sm:grid-cols-3 gap-8">
+                <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-fit">
+                  <button 
+                    onClick={() => setActiveTab('experience')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'experience' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'}`}
+                  >
+                    Experience
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('education')}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'education' ? 'bg-emerald-500 text-black' : 'text-white/60 hover:text-white'}`}
+                  >
+                    Education
+                  </button>
+                </div>
+              </div>
+
+              <div className="lg:w-2/3">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {(activeTab === 'experience' ? experiences : education).map((item, i) => (
+                      <ExperienceItem key={i} index={i} {...item} />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section id="contact" className="min-h-screen flex items-center py-32">
+          <div className="container mx-auto px-6">
+            <div className="glass rounded-[3rem] p-12 md:p-16 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full" />
+              
+              <div className="relative z-10 max-w-4xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-display font-bold mb-8 text-center">Let's make some <span className="text-emerald-500">noise</span>.</h2>
+                
+                <div className="grid sm:grid-cols-3 gap-8 mb-12">
                   <div className="flex flex-col items-center gap-4 group cursor-pointer">
                     <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all">
                       <Mail size={20} />
                     </div>
-                    <div>
+                    <div className="text-center">
                       <p className="text-xs font-mono text-white/40 uppercase tracking-widest">Email</p>
-                      <p className="font-medium">preetkamble777@gmail.com</p>
+                      <p className="font-medium text-sm">preetkamble777@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-4 group cursor-pointer">
                     <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all">
                       <Phone size={20} />
                     </div>
-                    <div>
+                    <div className="text-center">
                       <p className="text-xs font-mono text-white/40 uppercase tracking-widest">Phone</p>
-                      <p className="font-medium">+91 7083767924</p>
+                      <p className="font-medium text-sm">+91 7083767924</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-4 group cursor-pointer">
                     <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-black transition-all">
                       <MapPin size={20} />
                     </div>
-                    <div>
+                    <div className="text-center">
                       <p className="text-xs font-mono text-white/40 uppercase tracking-widest">Location</p>
-                      <p className="font-medium">Nagpur, Maharashtra</p>
+                      <p className="font-medium text-sm">Nagpur, Maharashtra</p>
                     </div>
                   </div>
                 </div>
+
+                <footer className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                  <p className="text-white/40 text-xs font-mono uppercase">
+                    © 2026 PRIT KAMBLE
+                  </p>
+                  <div className="flex gap-8 text-white/40 text-xs font-mono uppercase tracking-widest">
+                    <a href="https://www.linkedin.com/in/prit-kamble-20315317b" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">LinkedIn</a>
+                  </div>
+                </footer>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-white/5">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-white/40 text-sm font-mono">
-            © 2026 PRIT KAMBLE. ALL RIGHTS RESERVED.
-          </p>
-          <div className="flex gap-8 text-white/40 text-sm font-mono uppercase tracking-widest">
-            <a 
-              href="https://www.linkedin.com/in/prit-kamble-20315317b" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="hover:text-emerald-500 transition-colors"
-            >
-              LinkedIn
-            </a>
-          </div>
-        </div>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 }
