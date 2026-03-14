@@ -271,8 +271,12 @@ const SideNav = ({ activeIndex, onDotClick }: { activeIndex: number; onDotClick:
           className="group relative flex items-center justify-center p-1.5 md:p-2"
           aria-label={`Scroll to ${section.label}`}
         >
-          {/* Label - Hidden on mobile, visible on hover for desktop */}
-          <span className="absolute right-10 px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap translate-x-2 group-hover:translate-x-0 hidden md:block">
+          {/* Label - Visible when active or on hover */}
+          <span className={`absolute right-full mr-4 text-[10px] font-mono uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap pointer-events-none ${
+            activeIndex === i 
+              ? 'opacity-100 text-emerald-500 translate-x-0' 
+              : 'opacity-0 group-hover:opacity-100 text-white/40 translate-x-2'
+          }`}>
             {section.label}
           </span>
           
@@ -526,46 +530,7 @@ export default function App() {
           >
             PRIT<span className="text-emerald-500">.</span>KAMBLE
           </motion.div>
-          
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-12 text-sm font-mono uppercase tracking-widest text-white/60">
-            <a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="hover:text-emerald-500 transition-colors">About</a>
-            <a href="#skills" onClick={(e) => scrollToSection(e, 'skills')} className="hover:text-emerald-500 transition-colors">Skills</a>
-            <a href="#portfolio" onClick={(e) => scrollToSection(e, 'portfolio')} className="hover:text-emerald-500 transition-colors">Portfolio</a>
-            <a href="#experiments" onClick={(e) => scrollToSection(e, 'experiments')} className="hover:text-emerald-500 transition-colors">Experiments</a>
-            <a href="#work" onClick={(e) => scrollToSection(e, 'work')} className="hover:text-emerald-500 transition-colors">Career</a>
-            <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-emerald-500 transition-colors">Contact</a>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden text-white p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
-
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-full left-0 w-full bg-black/95 backdrop-blur-xl border-b border-white/10 md:hidden"
-            >
-              <div className="flex flex-col p-8 gap-6 text-sm font-mono uppercase tracking-widest">
-                <a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="text-white/70 hover:text-emerald-500 py-2">About</a>
-                <a href="#skills" onClick={(e) => scrollToSection(e, 'skills')} className="text-white/70 hover:text-emerald-500 py-2">Skills</a>
-                <a href="#portfolio" onClick={(e) => scrollToSection(e, 'portfolio')} className="text-white/70 hover:text-emerald-500 py-2">Portfolio</a>
-                <a href="#experiments" onClick={(e) => scrollToSection(e, 'experiments')} className="text-white/70 hover:text-emerald-500 py-2">Experiments</a>
-                <a href="#work" onClick={(e) => scrollToSection(e, 'work')} className="text-white/70 hover:text-emerald-500 py-2">Career</a>
-                <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="text-white/70 hover:text-emerald-500 py-2">Contact</a>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
 
       {/* Side Dot Navigation */}
