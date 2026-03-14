@@ -444,7 +444,7 @@ export default function App() {
           <div className="hidden md:flex items-center gap-12 text-sm font-mono uppercase tracking-widest text-white/60">
             <a href="#about" className="hover:text-emerald-500 transition-colors">About</a>
             <a href="#skills" className="hover:text-emerald-500 transition-colors">Skills</a>
-            <button onClick={scrollToPortfolio} className="hover:text-emerald-500 transition-colors uppercase">Portfolio</button>
+            <a href="#portfolio" className="hover:text-emerald-500 transition-colors">Portfolio</a>
             <a href="#experiments" className="hover:text-emerald-500 transition-colors">Experiments</a>
             <a href="#work" className="hover:text-emerald-500 transition-colors">Career</a>
             <a href="#contact" className="hover:text-emerald-500 transition-colors">Contact</a>
@@ -453,7 +453,7 @@ export default function App() {
       </nav>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative pt-40 pb-20 overflow-hidden">
+      <section id="about" ref={heroRef} className="relative pt-40 pb-20 overflow-hidden">
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl">
             <motion.div
