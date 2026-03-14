@@ -292,8 +292,22 @@ export default function App() {
     }
   };
 
-  const scrollToPortfolio = () => {
-    portfolioRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const headerOffset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      // Update URL hash without jumping
+      window.history.pushState(null, '', `#${id}`);
+    }
   };
 
   const skills = [
@@ -442,12 +456,12 @@ export default function App() {
             PRIT<span className="text-emerald-500">.</span>KAMBLE
           </motion.div>
           <div className="hidden md:flex items-center gap-12 text-sm font-mono uppercase tracking-widest text-white/60">
-            <a href="#about" className="hover:text-emerald-500 transition-colors">About</a>
-            <a href="#skills" className="hover:text-emerald-500 transition-colors">Skills</a>
-            <a href="#portfolio" className="hover:text-emerald-500 transition-colors">Portfolio</a>
-            <a href="#experiments" className="hover:text-emerald-500 transition-colors">Experiments</a>
-            <a href="#work" className="hover:text-emerald-500 transition-colors">Career</a>
-            <a href="#contact" className="hover:text-emerald-500 transition-colors">Contact</a>
+            <a href="#about" onClick={(e) => scrollToSection(e, 'about')} className="hover:text-emerald-500 transition-colors">About</a>
+            <a href="#skills" onClick={(e) => scrollToSection(e, 'skills')} className="hover:text-emerald-500 transition-colors">Skills</a>
+            <a href="#portfolio" onClick={(e) => scrollToSection(e, 'portfolio')} className="hover:text-emerald-500 transition-colors">Portfolio</a>
+            <a href="#experiments" onClick={(e) => scrollToSection(e, 'experiments')} className="hover:text-emerald-500 transition-colors">Experiments</a>
+            <a href="#work" onClick={(e) => scrollToSection(e, 'work')} className="hover:text-emerald-500 transition-colors">Career</a>
+            <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-emerald-500 transition-colors">Contact</a>
           </div>
         </div>
       </nav>
@@ -479,7 +493,7 @@ export default function App() {
               <div className="flex flex-wrap gap-6 items-center">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
-                  onClick={scrollToPortfolio}
+                  onClick={(e: any) => scrollToSection(e, 'portfolio')}
                   className="flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-bold transition-all hover:bg-emerald-500"
                 >
                   View Portfolio <ChevronRight size={20} />

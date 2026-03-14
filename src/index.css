@@ -6,10 +6,12 @@
   --font-display: "Space Grotesk", sans-serif;
 }
 
+html {
+  scroll-behavior: smooth !important;
+  scroll-padding-top: 100px;
+}
+
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
   body {
     @apply bg-[#0a0a0a] text-white selection:bg-emerald-500/30;
   }
