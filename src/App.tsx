@@ -562,15 +562,7 @@ export default function App() {
                 </p>
               </motion.div>
 
-              <div className="flex flex-wrap gap-6 items-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => scrollToSection(null, 'portfolio')}
-                  className="flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-bold transition-all hover:bg-emerald-500"
-                >
-                  View Portfolio <ChevronRight size={20} />
-                </motion.button>
-              </div>
+              {/* Removed View Portfolio button */}
             </div>
           </div>
 
